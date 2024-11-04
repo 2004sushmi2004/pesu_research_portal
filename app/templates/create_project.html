@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Create Project</h1>
+<form method="POST" action="{{ url_for('create_project') }}">
+    {{ form.csrf_token }}
+    <div>{{ form.name.label }} {{ form.name }}</div>
+    <div>{{ form.description.label }} {{ form.description }}</div>
+    <div>{{ form.submit }}</div>
+</form>
+{% endblock %}

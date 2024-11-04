@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Projects</title>
+</head>
+<body>
+    <h1>Your Projects</h1>
+    <ul>
+        {% for project in projects %}
+            <li>{{ project.name }} - {{ project.description }}</li>
+        {% else %}
+            <li>No projects found.</li>
+        {% endfor %}
+    </ul>
+    <a href="{{ url_for('create_project') }}">Create New Project</a>
+</body>
+</html>

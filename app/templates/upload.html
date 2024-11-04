@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Upload Research Material</h1>
+<form method="POST" action="{{ url_for('upload_research_material') }}" enctype="multipart/form-data">
+    {{ form.csrf_token }}
+    <div>{{ form.title.label }} {{ form.title }}</div>
+    <div>{{ form.author.label }} {{ form.author }}</div>
+    <div>{{ form.publication_date.label }} {{ form.publication_date }}</div>
+    <div>{{ form.file.label }} {{ form.file }}</div>
+    <div>{{ form.submit }}</div>
+</form>
+{% endblock %}
