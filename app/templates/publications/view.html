@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Publications{% endblock %}
+{% block content %}
+<h2>Publications</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Authors</th>
+            <th>Journal</th>
+            <th>Year</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for publication in publications %}
+        <tr>
+            <td>{{ publication.title }}</td>
+            <td>{{ publication.authors }}</td>
+            <td>{{ publication.journal }}</td>
+            <td>{{ publication.year }}</td>
+            <td>
+                <a href="{{ url_for('delete_publication', publication_id=publication.id) }}" class="btn btn-outline-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

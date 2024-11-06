@@ -4,11 +4,6 @@ from logging.config import fileConfig
 from flask import current_app
 
 from alembic import context
-from app.models import User, ResearchMaterial, Project  # replace 'your_app' with the actual name of your app package
-from app.models import db  # Adjust as necessary based on your models
-
-target_metadata = db.metadata  # Set target metadata
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -54,8 +49,6 @@ def get_metadata():
     if hasattr(target_db, 'metadatas'):
         return target_db.metadatas[None]
     return target_db.metadata
-
-
 
 
 def run_migrations_offline():

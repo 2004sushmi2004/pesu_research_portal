@@ -1,20 +1,104 @@
-<!-- templates/login.html -->
-{% extends "base.html" %}
-{% block title %}Login{% endblock %}
-{% block content %}
-<div class="form-container">
-    <h2>Login to PESU Research Portal</h2>
-    <form method="POST">
-        {{ form.hidden_tag() }}
-        <div class="form-group">
-            {{ form.email.label }}<br>
-            {{ form.email(class="form-control") }}
-        </div>
-        <div class="form-group">
-            {{ form.password.label }}<br>
-            {{ form.password(class="form-control") }}
-        </div>
-        {{ form.submit(class="btn") }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Research Portal</title>
+  <style>
+    /* Add your CSS styles here */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .login-container {
+      background-color: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    .flash-message {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .flash-message.success {
+      color: #4CAF50;
+    }
+
+    .flash-message.danger {
+      color: #ff0000;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Login</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="POST" action="{{ url_for('login') }}">
+      {{ form.csrf_token }}
+      <div class="form-group">
+        {{ form.email.label }}
+        {{ form.email(class="form-control") }}
+      </div>
+      <div class="form-group">
+        {{ form.password.label }}
+        {{ form.password(class="form-control") }}
+      </div>
+      <button type="submit">Login</button>
     </form>
-</div>
-{% endblock %}
+  </div>
+</body>
+</html>

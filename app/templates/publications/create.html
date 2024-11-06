@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Funding Applications{% endblock %}
+{% block content %}
+<h2>Funding Applications</h2>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Duration</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for application in applications %}
+        <tr>
+            <td>{{ application.title }}</td>
+            <td>{{ application.description }}</td>
+            <td>${{ application.amount }}</td>
+            <td>{{ application.duration }} months</td>
+            <td>{{ application.status }}</td>
+            <td>
+                <a href="{{ url_for('delete_funding_application', application_id=application.id) }}" class="btn btn-outline-danger btn-sm">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

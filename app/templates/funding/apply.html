@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Apply for Funding{% endblock %}
+{% block content %}
+<h2>Apply for Funding</h2>
+<form method="post">
+    {{ form.hidden_tag() }}
+    <div class="mb-3">
+        {{ form.title.label(class="form-label") }}
+        {{ form.title(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.description.label(class="form-label") }}
+        {{ form.description(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.amount.label(class="form-label") }}
+        {{ form.amount(class="form-control") }}
+    </div>
+    <div class="mb-3">
+        {{ form.duration.label(class="form-label") }}
+        {{ form.duration(class="form-control") }}
+    </div>
+    <button type="submit" class="btn btn-primary">Submit Application</button>
+</form>
+{% endblock %}

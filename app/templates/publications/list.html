@@ -1,0 +1,8 @@
+{% for paper in papers %}
+    <div>
+        <h2>{{ paper.title }}</h2>
+        <p>Abstract: {{ paper.abstract }}</p>
+        <p>Keywords: {{ paper.keywords }}</p>
+        <p>Uploaded by: {{ paper.researcher.f_name }} {{ paper.researcher.l_name }}</p>  
+    </div>
+{% endfor %}

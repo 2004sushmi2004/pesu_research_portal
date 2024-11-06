@@ -4,6 +4,10 @@
 <h1>Create Project</h1>
 <form method="POST" action="{{ url_for('create_project') }}">
     {{ form.csrf_token }}
+    <div class="form-group">
+        {{ form.title.label }}
+        {{ form.title(class="form-control") }}
+    </div>
     <div>{{ form.name.label }} {{ form.name }}</div>
     <div>{{ form.description.label }} {{ form.description }}</div>
     <div>{{ form.submit }}</div>

@@ -1,95 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Researcher Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}"> <!-- Include your CSS file if needed -->
-    <style>
-        /* Basic styling */
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-        }
-        .container {
-            text-align: center;
-            padding: 40px;
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-            width: 95%;
-            max-width: 700px;
-        }
-        h1 {
-            font-size: 2.8em;
-            color: #333;
-            margin-bottom: 15px;
-        }
-        p {
-            font-size: 1.4em;
-            color: #555;
-            margin-bottom: 25px;
-        }
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .btn {
-            display: inline-block;
-            padding: 14px 28px;
-            font-size: 1.2em;
-            color: #fff;
-            background-color: #007bff;
-            text-decoration: none;
-            border-radius: 6px;
-            transition: background-color 0.3s ease;
-            text-align: center;
-        }
-        .btn:hover {
-            background-color: #0056b3;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Portal - Dashboard</title>
+  <style>
+    /* Add your CSS styles here */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
 
-        /* Larger screens */
-        @media (min-width: 992px) {
-            .container {
-                padding: 50px;
-                max-width: 800px;
-            }
-            h1 {
-                font-size: 3em;
-            }
-            p {
-                font-size: 1.5em;
-            }
-            .button-group {
-                flex-direction: row;
-                flex-wrap: wrap;
-                gap: 20px;
-            }
-            .btn {
-                flex: 1 1 calc(50% - 20px); /* Two buttons per row */
-                padding: 15px 30px;
-                font-size: 1.3em;
-            }
-        }
-    </style>
+    header {
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    nav ul {
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+    }
+
+    nav li {
+      margin-left: 20px;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+    }
+
+    nav a:hover {
+      color: #ccc;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .button {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 4px;
+      margin: 10px;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome, {{ user.email }}</h1>
-        <p>Choose an action:</p>
-        <div class="button-group">
-            <a href="{{ url_for('upload_research_material') }}" class="btn">Upload Research Material</a>
-            <a href="{{ url_for('projects') }}" class="btn">View Projects</a>
-            <a href="{{ url_for('research_materials') }}" class="btn">View Research Materials</a>
-            <a href="{{ url_for('logout') }}" class="btn">Logout</a>
-        </div>
-    </div>
+  <header>
+    <h1>Research Portal</h1>
+    <nav>
+      <ul>
+        <li><a href="{{ url_for('view_papers') }}">View Papers</a></li>
+        <li><a href="{{ url_for('create_paper') }}">Upload Paper</a></li>
+        <li><a href="{{ url_for('view_datasets') }}">View Datasets</a></li>
+        <li><a href="{{ url_for('create_dataset') }}">Upload Dataset</a></li>
+        <li><a href="{{ url_for('view_projects') }}">View Projects</a></li>
+        <li><a href="{{ url_for('create_project') }}">Create Project</a></li>
+        <li><a href="{{ url_for('view_funding') }}">Funding Sources</a></li>
+        <li><a href="{{ url_for('view_publications') }}">Publications</a></li>
+        <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
+  <div class="content">
+    <h2>Welcome, {{ user.f_name }} {{ user.l_name }}!</h2>
+    <p>This is your research portal dashboard. Use the navigation menu to access various features.</p>
+  </div>
 </body>
 </html>
