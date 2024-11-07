@@ -1,136 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Register - Research Portal</title>
-  <style>
-    /* Add your CSS styles here */
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
+{% extends "base.html" %}
 
-    .register-container {
-      background-color: white;
-      padding: 40px;
-      border-radius: 8px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-      width: 400px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-    }
-
-    button:hover {
-      background-color: #45a049;
-    }
-
-    .flash-message {
-      text-align: center;
-      margin-top: 20px;
-    }
-
-    .flash-message.success {
-      color: #4CAF50;
-    }
-
-    .flash-message.danger {
-      color: #ff0000;
-    }
-  </style>
-</head>
-<body>
-  <div class="register-container">
-    <h1>Register</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="flash-message {{ category }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Register</h2>
     <form method="POST" action="{{ url_for('register') }}">
-        {{ form.hidden_tag() }}
-        <div>
-            {{ form.email.label }} {{ form.email(size=32) }}
-            {% for error in form.email.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+        <div class="form-group">
+            <label for="email">Email address</label>
+            <input type="email" class="form-control" id="email" name="email" required>
         </div>
-        <div>
-            {{ form.password.label }} {{ form.password(size=32) }}
-            {% for error in form.password.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+        
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
         </div>
-        <div>
-            {{ form.f_name.label }} {{ form.f_name(size=32) }}
-            {% for error in form.f_name.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+        
+        <div class="form-group">
+            <label for="confirm_password">Confirm Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
         </div>
-        <div>
-            {{ form.l_name.label }} {{ form.l_name(size=32) }}
-            {% for error in form.l_name.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+        
+        <div class="form-group">
+            <label for="f_name">First Name</label>
+            <input type="text" class="form-control" id="f_name" name="f_name" required>
         </div>
-        <div>
-            {{ form.expertise.label }} {{ form.expertise(size=32) }}
-            {% for error in form.expertise.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+        
+        <div class="form-group">
+            <label for="l_name">Last Name</label>
+            <input type="text" class="form-control" id="l_name" name="l_name" required>
         </div>
-        <div>
-            {{ form.affiliation.label }} {{ form.affiliation(size=32) }}
-            {% for error in form.affiliation.errors %}
-                <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
+        
+        <div class="form-group">
+            <label for="expertise">Expertise</label>
+            <input type="text" class="form-control" id="expertise" name="expertise">
         </div>
-        <div>
-            {{ form.submit() }}
+        
+        <div class="form-group">
+            <label for="affiliation">Affiliation</label>
+            <input type="text" class="form-control" id="affiliation" name="affiliation">
         </div>
+        
+        <button type="submit" class="btn btn-primary mt-3">Register</button>
     </form>
-    
-  </div>
-</body>
-</html>
+</div>
+{% endblock %}

@@ -1,15 +1,21 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Project</title>
+</head>
+<body>
+    <h1>Create a New Project</h1>
 
-{% block content %}
-<h1>Create Project</h1>
-<form method="POST" action="{{ url_for('create_project') }}">
-    {{ form.csrf_token }}
-    <div class="form-group">
-        {{ form.title.label }}
-        {{ form.title(class="form-control") }}
-    </div>
-    <div>{{ form.name.label }} {{ form.name }}</div>
-    <div>{{ form.description.label }} {{ form.description }}</div>
-    <div>{{ form.submit }}</div>
-</form>
-{% endblock %}
+    <form action="{{ url_for('create_project') }}" method="POST">
+        <label for="title">Project Title:</label>
+        <input type="text" name="title" id="title" required>
+        <br>
+        <label for="description">Project Description:</label>
+        <textarea name="description" id="description" required></textarea>
+        <br>
+        <button type="submit">Create Project</button>
+    </form>
+</body>
+</html>

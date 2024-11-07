@@ -1,364 +1,556 @@
-from flask import Flask, redirect, url_for, flash, render_template, request, send_from_directory, abort
-from flask_migrate import Migrate
+from flask import Flask, redirect, url_for, flash, render_template, request, send_file, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from werkzeug.utils import secure_filename
+import mysql.connector
+from mysql.connector import Error
+import io
+import uuid
 from datetime import datetime
 import os
-import io
-from flask import send_file, abort, current_app
-import uuid
 
-from .config import Config
-from .extensions import db
-from .models import (
-    Researcher, ResearchPaper, Dataset, Publication, Project, 
-    Collaboration, Reviewer, FundingSource
-)
-from .forms import (
-    ResearcherRegistrationForm, LoginForm, ResearchPaperForm,
-    DatasetForm, ProjectForm, CollaborationForm, ReviewForm,
-    FundingSourceForm, PublicationForm
-)
+class User:
+    def __init__(self, id, email):
+        self.id = id
+        self.email = email
+        self.is_authenticated = True
+        self.is_active = True
+        self.is_anonymous = False
 
+    def get_id(self):
+        return str(self.id)
 
-
-migrate = Migrate()
-login_manager = LoginManager()
+    
+def get_db_connection():
+    try:
+        connection = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="Unlock@2004",
+            database="pesu_research_portal"
+        )
+        return connection
+    except Error as e:
+        print(f"Error connecting to MySQL: {e}")
+        return None
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
-
-    db.init_app(app)
-    migrate.init_app(app, db)
+    app.config['SECRET_KEY'] = 'your-secret-key'
+    
+    login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = "login"
 
     @login_manager.user_loader
     def load_user(user_id):
         try:
-            return Researcher.query.get(int(user_id))
-        except Exception as e:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM researcher WHERE researcher_id = %s", (user_id,))
+            user_data = cursor.fetchone()
+            cursor.close()
+            conn.close()
+            
+            if user_data:
+                return User(user_data['researcher_id'], user_data['email'])
+            return None
+        except Error as e:
             print(f"Error loading user: {e}")
             return None
-
-    @app.route('/register', methods=['GET', 'POST'])
-    def register():
-        if current_user.is_authenticated:
-            return redirect(url_for('index'))
-            
-        form = ResearcherRegistrationForm()
-        if form.validate_on_submit():
-            email = form.email.data.strip()
-            try:
-                hashed_password = generate_password_hash(form.password.data, method='pbkdf2:sha256')
-                researcher = Researcher(
-                    email=email,
-                    password=hashed_password,
-                    f_name=form.f_name.data,
-                    l_name=form.l_name.data,
-                    expertise=form.expertise.data,
-                    affiliation=form.affiliation.data
-                )
-                db.session.add(researcher)
-                db.session.commit()
-                flash('Registration successful! Please log in.', 'success')
-                return redirect(url_for('login'))
-            except Exception as e:
-                db.session.rollback()
-                flash('Registration failed. Please try again.', 'danger')
-
-        # Debugging: Print form errors
-        if form.errors:
-            print("Form errors:", form.errors)
-
-        return render_template('register.html', form=form)
-
-
-    @app.route('/login', methods=['GET', 'POST'])
-    def login():
-        if current_user.is_authenticated:
-            return redirect(url_for('index'))
-            
-        form = LoginForm()
-        if form.validate_on_submit():
-            try:
-                researcher = Researcher.query.filter_by(email=form.email.data.strip()).first()
-                
-                if researcher and check_password_hash(researcher.password, form.password.data):
-                    login_user(researcher)
-                    flash('Login successful!', 'success')
-                    next_page = request.args.get('next')
-                    if not next_page or not next_page.startswith('/'):
-                        next_page = url_for('index')
-                    return redirect(next_page)
-                else:
-                    flash('Invalid email or password.', 'danger')
-            except Exception as e:
-                flash('An error occurred during login. Please try again.', 'danger')
         
-        return render_template('login.html', form=form)
-
-    @app.route('/logout')
-    @login_required
-    def logout():
-        logout_user()
-        flash('You have been logged out.', 'success')
-        return redirect(url_for('home'))
-
     @app.route('/')
     def home():
         return render_template('home.html')
 
-    @app.route('/index')
-    @login_required
-    def index():
-        return render_template('index.html', user=current_user)
-
-    @app.route('/papers/create', methods=['GET', 'POST'])
-    @login_required
-    def create_paper():
-        form = ResearchPaperForm()
-        if form.validate_on_submit():
-            print("Form is valid, processing the submission.")
+    @app.route('/register', methods=['GET', 'POST'])
+    def register():
+        if current_user.is_authenticated:
+            return redirect(url_for('home'))
             
-            # Read the uploaded file
-            file = form.file.data
-            
-            # Check if a file was uploaded
-            if file:
-                file_data = file.read()  # Read the file content
-                print(f"File uploaded successfully. Size: {len(file_data)} bytes")
+        if request.method == 'POST':
+            # Get form data
+            email = request.form.get('email', '').strip()
+            password = request.form.get('password', '')
+            confirm_password = request.form.get('confirm_password', '')
+            f_name = request.form.get('f_name', '').strip()
+            l_name = request.form.get('l_name', '').strip()
+            expertise = request.form.get('expertise', '').strip()
+            affiliation = request.form.get('affiliation', '').strip()
 
-                # Creating a new ResearchPaper instance
-                paper = ResearchPaper(
-                    title=form.title.data,
-                    email=form.email.data,  # Ensure you're capturing the email from the form
-                    paperid=str(uuid.uuid4()),  # Auto-generate a unique paper ID
-                    publication_place=form.publication_place.data,
-                    abstract=form.abstract.data,
-                    keywords=form.keywords.data,
-                    file=file_data,  # Store the file content directly in the database
-                    researcher_id=current_user.id  # Associate the paper with the logged-in researcher
+            # Basic validation
+            errors = []
+            if not email or '@' not in email:
+                errors.append('Valid email is required')
+            if not password:
+                errors.append('Password is required')
+            if password != confirm_password:
+                errors.append('Passwords do not match')
+            if not f_name:
+                errors.append('First name is required')
+            if not l_name:
+                errors.append('Last name is required')
+
+            if errors:
+                for error in errors:
+                    flash(error, 'danger')
+                return render_template('register.html')
+
+            try:
+                conn = get_db_connection()
+                if not conn:
+                    flash('Database connection failed', 'danger')
+                    return render_template('register.html')
+
+                cursor = conn.cursor()
+                
+                # Check if email already exists
+                cursor.execute("SELECT email FROM researcher WHERE email = %s", (email,))
+                if cursor.fetchone():
+                    flash('Email already registered', 'danger')
+                    return render_template('register.html')
+
+                # Generate unique researcher_id and hash password
+                researcher_id = str(uuid.uuid4())
+                hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+                
+                # Insert new researcher
+                insert_query = """
+                    INSERT INTO researcher 
+                    (researcher_id, email, password, f_name, l_name, expertise, affiliation)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                values = (
+                    researcher_id,
+                    email,
+                    hashed_password,
+                    f_name,
+                    l_name,
+                    expertise,
+                    affiliation
                 )
                 
-                print(f"ResearchPaper object created: {paper.title}, {paper.paperid}")
+                cursor.execute(insert_query, values)
+                conn.commit()
+                
+                flash('Registration successful! Please log in.', 'success')
+                return redirect(url_for('login'))
 
-                try:
-                    db.session.add(paper)
-                    db.session.commit()
-                    print("Paper uploaded and saved to the database successfully.")
-                    flash('Paper uploaded successfully!', 'success')
-                    return redirect(url_for('view_papers'))
-                except Exception as e:
-                    db.session.rollback()  # Rollback in case of an error
-                    print(f"Error occurred while saving paper to the database: {e}")
-                    flash('An error occurred while uploading the paper. Please try again.', 'danger')
-            else:
-                print("No file was uploaded.")
-                flash('Please upload a file.', 'warning')
-        else:
-            print("Form submission was not valid.")
-            # Print specific validation errors
-            for field, errors in form.errors.items():
-                for error in errors:
-                    print(f"Error in {field}: {error}")
-            flash('There was an error with your submission. Please correct the fields and try again.', 'danger')
+            except Error as e:
+                flash(f'Registration failed: {str(e)}', 'danger')
+                return render_template('register.html')
+                
+            finally:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+        
+        return render_template('register.html')
+    
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if current_user.is_authenticated:
+            return redirect(url_for('dashboard'))
             
-        # If form is not valid or file is not uploaded, show the form again
-        return render_template('papers/create.html', form=form)
+        if request.method == 'POST':
+            email = request.form.get('email', '').strip()
+            password = request.form.get('password', '')
+            
+            if not email or not password:
+                flash('Please enter both email and password', 'danger')
+                return render_template('login.html')
+                
+            try:
+                conn = get_db_connection()
+                if not conn:
+                    flash('Database connection failed', 'danger')
+                    return render_template('login.html')
+                    
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM researcher WHERE email = %s", (email,))
+                user_data = cursor.fetchone()
+                
+                if user_data and check_password_hash(user_data['password'], password):
+                    user = User(user_data['researcher_id'], user_data['email'])
+                    login_user(user)
+                    return redirect(url_for('dashboard'))
+                else:
+                    flash('Invalid email or password', 'danger')
+                    
+            except Error as e:
+                flash(f'Login failed: {str(e)}', 'danger')
+                
+            finally:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+                    
+        return render_template('login.html')
 
-
-
-
-    @app.route('/papers/download/<int:paper_id>', methods=['GET'])
+    @app.route('/dashboard')
     @login_required
-    def download_paper(paper_id):
-        # Fetch the paper from the database
-        paper = ResearchPaper.query.get(paper_id)
-        if paper is None:
-            abort(404)  # Paper not found
+    def dashboard():
+        return render_template('dashboard.html')
 
-        # Create a response to send the file data
-        return send_file(
-            io.BytesIO(paper.file),
-            as_attachment=True,
-            download_name=paper.title + '.pdf',  # Provide a name for the download
-            mimetype='application/pdf'  # Correct MIME type for PDF files
-    )
+    @app.route('/logout')
+    def logout():
+        logout_user()
+        flash('You have been logged out successfully.', 'info')
+        return redirect(url_for('login'))
 
-
-    @app.route('/papers')
+    @app.route('/upload_paper', methods=['GET', 'POST'])
     @login_required
-    def view_papers():
-        papers = ResearchPaper.query.all()
-        return render_template('papers/list.html', papers=papers)
+    def upload_paper():
+        if request.method == 'POST':
+            # Get form data
+            title = request.form.get('title', '').strip()
+            authors = request.form.get('authors', '').strip()
+            abstract = request.form.get('abstract', '').strip()
+            publication_date = request.form.get('publication_date', '').strip()
+            publication_venueid = request.form.get('publication_venueid', '').strip()
+            keywords = request.form.get('keywords', '').strip()
+            paper_file = request.files['paper_file']
 
-    app.config['MAX_CONTENT_LENGTH'] = 64 * 1024 * 1024  # 64 MB
+            # Generate unique paperid
+            paperid = str(uuid.uuid4())
 
-    @app.route('/datasets/create', methods=['GET', 'POST'])
-    @login_required
-    def create_dataset():
-        form = DatasetForm()
-        if form.validate_on_submit():
-            file = form.file.data
-            if file:
-                # Read file data
-                file_data = file.read()  # Read the content of the file
-                file_size = len(file_data)
+            try:
+                conn = get_db_connection()
+                if not conn:
+                    flash('Database connection failed', 'danger')
+                    return render_template('upload_paper.html')
 
-                # Log the file size for debugging
-                print(f"File size: {file_size} bytes")
+                cursor = conn.cursor()
 
-                # Check if the file size exceeds a certain limit (e.g., 16 MB for MEDIUMBLOB)
-                if file_size > 16 * 1024 * 1024:  # 16 MB
-                    flash('File size exceeds the maximum limit of 16 MB.', 'error')
-                    return redirect(url_for('create_dataset'))
-                # Create a new Dataset instance
-                new_dataset = Dataset(
-                    name=form.name.data,
-                    description=form.description.data,
-                    file_data=file_data  # Store file data directly in the database
+                # Insert new research paper
+                insert_query = """
+                    INSERT INTO research_paper
+                    (paperid, title, authors, abstract, publication_date, publication_venueid, file, researcher_id, keywords)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                values = (
+                    paperid,
+                    title,
+                    authors,
+                    abstract,
+                    publication_date,
+                    publication_venueid,
+                    paper_file.read(),
+                    current_user.id,
+                    keywords
                 )
-                db.session.add(new_dataset)
-                db.session.commit()
+
+                cursor.execute(insert_query, values)
+                conn.commit()
+
+                flash('Paper uploaded successfully!', 'success')
+                return redirect(url_for('dashboard'))
+
+            except Error as e:
+                flash(f'Failed to upload paper: {str(e)}', 'danger')
+                return render_template('upload_paper.html')
+
+            finally:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+
+        return render_template('upload_paper.html')
+    
+    @app.route('/my_papers')
+    @login_required
+    def my_papers():
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'danger')
+                return redirect(url_for('dashboard'))
+
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM research_paper WHERE researcher_id = %s", (current_user.id,))
+            my_papers = cursor.fetchall()
+
+            return render_template('my_papers.html', papers=my_papers)
+
+        except Error as e:
+            flash(f'Failed to retrieve papers: {str(e)}', 'danger')
+            return redirect(url_for('dashboard'))
+
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+
+    @app.route('/browse_papers')
+    def browse_papers():
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'danger')
+                return redirect(url_for('dashboard'))
+
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM research_paper")
+            all_papers = cursor.fetchall()
+
+            return render_template('browse_papers.html', papers=all_papers)
+
+        except Error as e:
+            flash(f'Failed to retrieve papers: {str(e)}', 'danger')
+            return redirect(url_for('dashboard'))
+
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+    @app.route('/download_paper/<paperid>')
+    @login_required
+    def download_paper(paperid):
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'danger')
+                return redirect(url_for('dashboard'))
+
+            cursor = conn.cursor()
+            cursor.execute("SELECT file, title FROM research_paper WHERE paperid = %s", (paperid,))
+            paper_data = cursor.fetchone()
+
+            if paper_data:
+                file_data = paper_data[0]
+                file_name = f"{paper_data[1]}.pdf"
+                return send_file(io.BytesIO(file_data), mimetype='application/pdf', as_attachment=True, download_name=file_name)
+            else:
+                flash('Paper not found', 'danger')
+                return redirect(url_for('my_papers'))
+
+        except Error as e:
+            flash(f'Failed to download paper: {str(e)}', 'danger')
+            return redirect(url_for('my_papers'))
+
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+
+    @app.route('/delete_paper/<paperid>', methods=['POST'])
+    @login_required
+    def delete_paper(paperid):
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'danger')
+                return redirect(url_for('my_papers'))
+
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM research_paper WHERE paperid = %s AND researcher_id = %s", (paperid, current_user.id))
+            conn.commit()
+
+            flash('Paper deleted successfully', 'success')
+            return redirect(url_for('my_papers'))
+
+        except Error as e:
+            flash(f'Failed to delete paper: {str(e)}', 'danger')
+            return redirect(url_for('my_papers'))
+
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+            if 'conn' in locals():
+                conn.close()
+
+    @app.route('/upload_dataset', methods=['GET', 'POST'])
+    @login_required
+    def upload_dataset():
+        if request.method == 'POST':
+            # Get form data
+            name = request.form.get('name', '').strip()
+            description = request.form.get('description', '').strip()
+            dataset_file = request.files['dataset_file']
+
+            # Generate unique dataset_id
+            dataset_id = str(uuid.uuid4())
+
+            try:
+                conn = get_db_connection()
+                if not conn:
+                    flash('Database connection failed', 'danger')
+                    return render_template('upload_dataset.html')
+
+                cursor = conn.cursor()
+
+                # Insert new dataset, including researcher_id
+                insert_query = """
+                    INSERT INTO dataset
+                    (dataset_id, name, description, meta_data, file, researcher_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                values = (
+                    dataset_id,
+                    name,
+                    description,
+                    '',  # You can add metadata if needed
+                    dataset_file.read(),
+                    current_user.id  # Add the researcher_id
+                )
+
+                cursor.execute(insert_query, values)
+                conn.commit()
 
                 flash('Dataset uploaded successfully!', 'success')
-                return redirect(url_for('view_datasets'))
-            else:
-                flash('Please upload a file.', 'danger')
+                return redirect(url_for('dashboard'))
 
-        return render_template('datasets/create.html', form=form)
+            except Error as e:
+                flash(f'Failed to upload dataset: {str(e)}', 'danger')
+                return render_template('upload_dataset.html')
+
+            finally:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+
+        return render_template('upload_dataset.html')
 
 
 
-    @app.route('/datasets/download/<int:dataset_id>', methods=['GET'])
+    @app.route('/download_dataset/<dataset_id>')
     @login_required
     def download_dataset(dataset_id):
-        # Fetch the dataset from the database
-        dataset = Dataset.query.get(dataset_id)
-        if dataset is None:
-            abort(404)  # Dataset not found
-
-        # Create a temporary file to send the dataset
         try:
-            return send_file(
-                io.BytesIO(dataset.file_data),
-                as_attachment=True,
-                download_name=f"{dataset.name}.csv",  # Provide a name for the download
-                mimetype='text/csv'  # Correct MIME type
-            )
+            print("Entering download_dataset() function")
+            conn = get_db_connection()
+            if not conn:
+                print("Database connection failed")
+                flash('Database connection failed', 'danger')
+                return redirect(url_for('dashboard'))
+
+            cursor = conn.cursor()
+            print(f"Executing SQL query to retrieve dataset with ID: {dataset_id}")
+            cursor.execute("SELECT name, file FROM dataset WHERE dataset_id = %s", (dataset_id,))
+            dataset_data = cursor.fetchone()
+
+            if dataset_data:
+                print("Dataset found, preparing download")
+                file_data = dataset_data[1]
+                file_name = f"{dataset_data[0]}.csv"
+                return send_file(io.BytesIO(file_data), mimetype='text/csv', download_name=file_name, as_attachment=True)
+            else:
+                print("Dataset not found")
+                flash('Dataset not found', 'danger')
+                return redirect(url_for('my_datasets'))
+
         except Exception as e:
-            abort(500)  # Handle unexpected errors
+            print(f"Exception occurred: {str(e)}")
+            flash(f'Failed to download dataset: {str(e)}', 'danger')
+            return redirect(url_for('my_datasets'))
+
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+                print("Closed database cursor")
+            if 'conn' in locals():
+                conn.close()
+                print("Closed database connection")
 
 
-    @app.route('/datasets')
+    @app.route('/delete_dataset/<dataset_id>', methods=['POST'])
     @login_required
-    def view_datasets():
-        datasets = Dataset.query.all()  # Get all datasets from the database
-        return render_template('datasets/list.html', datasets=datasets)
+    def delete_dataset(dataset_id):
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash('Database connection failed', 'danger')
+                return redirect(url_for('my_datasets'))
 
-    @app.route('/projects/create', methods=['GET', 'POST'])
-    @login_required
-    def create_project():
-        form = ProjectForm()
-        if form.validate_on_submit():
-            project = Project(
-                name=form.name.data,
-                description=form.description.data,
-                start_date=form.start_date.data,
-                end_date=form.end_date.data,
-                duration=form.duration.data,  # Ensure duration is handled
-                creator_id=current_user.id  # Associate the project with the logged-in researcher
-            )
-            db.session.add(project)
-            db.session.commit()
-            flash('Project created successfully!', 'success')
-            return redirect(url_for('view_projects'))
-        return render_template('projects/create.html', form=form)
+            cursor = conn.cursor()
+            print(f"Attempting to delete dataset with ID: {dataset_id}")
+            cursor.execute("DELETE FROM dataset WHERE dataset_id = %s AND researcher_id = %s", (dataset_id, current_user.id))
+            conn.commit()
+
+            flash('Dataset deleted successfully', 'success')
+            return redirect(url_for('my_datasets'))
+
+        except Exception as e:
+            print(f"Exception occurred: {str(e)}")
+            flash(f'Failed to delete dataset: {str(e)}', 'danger')
+            return redirect(url_for('my_datasets'))
+
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+                print("Closed database cursor")
+            if 'conn' in locals():
+                conn.close()
+                print("Closed database connection")
 
 
-    @app.route('/projects')
+    @app.route('/my_datasets')
     @login_required
-    def view_projects():
-        projects = Project.query.all()
-        return render_template('projects/list.html', projects=projects)
+    def my_datasets():
+        """ Render the 'my_datasets' template, displaying the user's uploaded datasets. """
+        try:
+            print("Entering my_datasets() function")
+            conn = get_db_connection()
+            if not conn:
+                print("Database connection failed")
+                flash('Database connection failed', 'danger')
+                return redirect(url_for('dashboard'))
+            
+            print(f"Current user ID: {current_user.id}")
+            cursor = conn.cursor(dictionary=True)
+            print("Executing SQL query to retrieve user's datasets")
+            cursor.execute("SELECT dataset_id, name, description, file FROM dataset WHERE researcher_id = %s", (current_user.id,))
+            my_datasets = cursor.fetchall()
+            print(f"Retrieved {len(my_datasets)} datasets for the user")
 
-    @app.route('/projects/<int:project_id>')
-    @login_required
-    def project_details(project_id):
-        project = Project.query.get_or_404(project_id)
-        return render_template('projects/details.html', project=project)
+            if not my_datasets:
+                flash("You haven't uploaded any datasets yet.", 'warning')
+            
+            return render_template('my_datasets.html', datasets=my_datasets)
 
-    # Review Routes
-    @app.route('/papers/<int:paper_id>/review', methods=['GET', 'POST'])
-    @login_required
-    def add_review(paper_id):
-        form = ReviewForm()
-        if form.validate_on_submit():
-            review = Reviewer(
-                paper_id=paper_id,
-                researcher_id=current_user.id,
-                comments=form.comments.data
-            )
-            db.session.add(review)
-            db.session.commit()
-            flash('Review submitted successfully!', 'success')
-            return redirect(url_for('view_papers'))
-        return render_template('reviews/create.html', form=form, paper_id=paper_id)
+        except Exception as e:
+            print(f"Exception occurred: {str(e)}")
+            flash(f'Failed to retrieve user datasets: {str(e)}', 'danger')
+            return redirect(url_for('dashboard'))
 
-    # Funding Routes
-    @app.route('/funding/create', methods=['GET', 'POST'])
-    @login_required
-    def create_funding():
-        form = FundingSourceForm()
-        if form.validate_on_submit():
-            funding = FundingSource(
-                name=form.name.data,
-                organization=form.organization.data
-            )
-            db.session.add(funding)
-            db.session.commit()
-            flash('Funding source added successfully!', 'success')
-            return redirect(url_for('view_funding'))
-        return render_template('funding/create.html', form=form)
+        finally:
+            if 'cursor' in locals():
+                cursor.close()
+                print("Closed database cursor")
+            if 'conn' in locals():
+                conn.close()
+                print("Closed database connection")
 
-    @app.route('/funding')
-    @login_required
-    def view_funding():
-        funding_sources = FundingSource.query.all()
-        return render_template('funding/list.html', funding_sources=funding_sources)
 
-    @app.route('/publications')
-    @login_required
-    def view_publications():
-        publications = Publication.query.all()
-        return render_template('publications/list.html', publications=publications)
+    @app.route('/browse_datasets')
+    def browse_datasets():
+            try:
+                conn = get_db_connection()
+                if not conn:
+                    flash('Database connection failed', 'danger')
+                    return redirect(url_for('dashboard'))
 
-    # Collaboration routes
-    @app.route('/projects/<int:project_id>/collaborate', methods=['GET', 'POST'])
-    @login_required
-    def collaborate(project_id):
-        form = CollaborationForm()
-        if form.validate_on_submit():
-            collaboration = Collaboration(
-                project_id=project_id,
-                researcher_id=current_user.id,
-                role=form.role.data,
-                join_date=datetime.now(),  # Set current date as join date
-                collaboration_id=form.collaboration_id.data  # Use form field or generate
-            )
-            db.session.add(collaboration)
-            db.session.commit()
-            flash('Collaboration created successfully!', 'success')
-            return redirect(url_for('project_details', project_id=project_id))
-        
-        return render_template('collaborations/add.html', form=form, project_id=project_id)
-    
-    @app.route('/projects/<int:project_id>/collaborations')
-    @login_required
-    def view_collaborations(project_id):
-        collaborations = Collaboration.query.filter_by(project_id=project_id).all()
-        return render_template('collaborations/list.html', collaborations=collaborations)
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM dataset")
+                all_datasets = cursor.fetchall()
+
+                return render_template('browse_datasets.html', datasets=all_datasets)
+
+            except Error as e:
+                flash(f'Failed to retrieve papers: {str(e)}', 'danger')
+                return redirect(url_for('dashboard'))
+
+            finally:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+
+
     return app

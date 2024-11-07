@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+  <div class="py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <h1 class="text-2xl font-bold mb-4">My Research Papers</h1>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Authors</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Publication Date</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for paper in papers %}
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ paper.title }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ paper.authors }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-gray-900">{{ paper.publication_date }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <a href="{{ url_for('download_paper', paperid=paper.paperid) }}" class="text-blue-500 hover:text-blue-700 mr-4">Download</a>
+                <form action="{{ url_for('delete_paper', paperid=paper.paperid) }}" method="post" class="inline-block">
+                  <button type="submit" class="text-red-500 hover:text-red-700">Delete</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

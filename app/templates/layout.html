@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PESU Research Portal</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200 fixed w-full z-30 top-0">
+      <div class="px-3 py-3 lg:px-5 lg:pl-3">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center justify-start">
+            <a href="{{ url_for('dashboard') }}" class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap">PESU Research Portal</a>
+          </div>
+          <div class="flex items-center">
+            <div class="flex items-center ml-3">
+              <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300" id="user-menu-button">
+                <span class="sr-only">Open user menu</span>
+                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white">
+                  {{ current_user.email[0].upper() }}
+                </div>
+              </button>
+              <div class="hidden z-50 my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow" id="dropdown-user">
+                <div class="px-4 py-3">
+                  <p class="text-sm text-gray-900">{{ current_user.email }}</p>
+                </div>
+                <ul class="py-1">
+                  <li>
+                    <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="pt-16">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="bg-{{ category }}-100 border-{{ category }}-400 text-{{ category }}-700 px-4 py-3 rounded relative" role="alert">
+              <strong class="font-bold">{{ category.capitalize() }}!</strong>
+              <span class="block sm:inline">{{ message }}</span>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+
+  <script>
+    // Toggle user dropdown
+    const userMenuButton = document.getElementById('user-menu-button');
+    const userDropdown = document.getElementById('dropdown-user');
+
+    userMenuButton.addEventListener('click', () => {
+      userDropdown.classList.toggle('hidden');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (event) => {
+      if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+        userDropdown.classList.add('hidden');
+      }
+    });
+  </script>
+</body>
+</html>

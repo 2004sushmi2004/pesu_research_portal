@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Portal Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.0/flowbite.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation bar -->
+    <nav class="bg-white border-b border-gray-200 fixed w-full z-30 top-0">
+        <div class="px-3 py-3 lg:px-5 lg:pl-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center justify-start">
+                    <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap">PESU Research Portal</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="flex items-center ml-3">
+                        <button type="button" class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300" id="user-menu-button">
+                            <span class="sr-only">Open user menu</span>
+                            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white">
+                                {{ current_user.email[0].upper() }}
+                            </div>
+                        </button>
+                        <div class="hidden z-50 my-4 text-base list-none bg-white divide-y divide-gray-100 rounded shadow" id="dropdown-user">
+                            <div class="px-4 py-3">
+                                <p class="text-sm text-gray-900">{{ current_user.email }}</p>
+                            </div>
+                            <ul class="py-1">
+                                <li>
+                                    <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="pt-16 px-4">
+        <div class="p-4 mt-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Research Papers Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">Research Papers</h3>
+                    <div class="space-y-3">
+                        <a href="{{ url_for('upload_paper') }}" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Upload Paper</a>
+                        <a href="{{ url_for('my_papers') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View My Papers</a>
+                        <a href="{{ url_for('browse_papers') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Browse All Papers</a>
+                    </div>
+                </div>
+
+                <!-- Datasets Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">Datasets</h3>
+                    <div class="space-y-3">
+                        <a href="{{ url_for('upload_dataset') }}" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Upload Dataset</a>
+                        <a href="{{ url_for('my_datasets') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View My Datasets</a>
+                        <a href="{{ url_for('browse_datasets') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Browse All Datasets</a>
+                    </div>
+                </div>
+
+                <!-- Collaboration Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">Collaboration</h3>
+                    <div class="space-y-3">
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Find Collaborators</a>
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Collaborations</a>
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Collaboration Requests</a>
+                    </div>
+                </div>
+
+                <!-- Funding Sources Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">Funding Sources</h3>
+                    <div class="space-y-3">
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Add Funding Source</a>
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View Funding Sources</a>
+                    </div>
+                </div>
+
+                <!-- Reviews Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">Reviews</h3>
+                    <div class="space-y-3">
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Write Review</a>
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Reviews</a>
+                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Papers to Review</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle user dropdown
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userDropdown = document.getElementById('dropdown-user');
+        
+        userMenuButton.addEventListener('click', () => {
+            userDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (event) => {
+            if (!userMenuButton.contains(event.target) && !userDropdown.contains(event.target)) {
+                userDropdown.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
