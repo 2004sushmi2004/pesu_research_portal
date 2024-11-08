@@ -59,17 +59,11 @@ def create_app():
             return None
         
     @app.route('/')
-    def landing():
-        if current_user.is_authenticated:
-            return redirect(url_for('home'))
-        return redirect(url_for('login'))
-
-    @app.route('/home')
-    @login_required
     def home():
         return render_template('home.html')
 
     @app.route('/register', methods=['GET', 'POST'])
+    
     def register():
         if current_user.is_authenticated:
             return redirect(url_for('home'))
@@ -157,7 +151,7 @@ def create_app():
     @app.route('/login', methods=['GET', 'POST'])
     def login():
         if current_user.is_authenticated:
-            return redirect(url_for('home'))
+            return redirect(url_for('dashboard'))
             
         if request.method == 'POST':
             email = request.form.get('email', '').strip()
@@ -180,7 +174,7 @@ def create_app():
                 if user_data and check_password_hash(user_data['password'], password):
                     user = User(user_data['researcher_id'], user_data['email'])
                     login_user(user)
-                    return redirect(url_for('home'))
+                    return redirect(url_for('dashboard'))
                 else:
                     flash('Invalid email or password', 'danger')
                     
@@ -194,7 +188,6 @@ def create_app():
                     conn.close()
                     
         return render_template('login.html')
-
 
     @app.route('/dashboard')
     @login_required
@@ -256,7 +249,7 @@ def create_app():
                 conn.commit()
 
                 flash('Paper uploaded successfully!', 'success')
-                return redirect(url_for('home'))
+                return redirect(url_for('dashboard'))
 
             except Error as e:
                 flash(f'Failed to upload paper: {str(e)}', 'danger')
@@ -453,7 +446,7 @@ def create_app():
                 conn.commit()
 
                 flash('Dataset uploaded successfully!', 'success')
-                return redirect(url_for('home'))
+                return redirect(url_for('dashboard'))
 
             except Error as e:
                 flash(f'Failed to upload dataset: {str(e)}', 'danger')
@@ -655,7 +648,7 @@ def create_app():
                 conn.commit()
                 
                 flash('Project created successfully!', 'success')
-                return redirect(url_for('home'))
+                return redirect(url_for('my_projects'))
 
             except Error as e:
                 flash(f'Failed to create project: {str(e)}', 'danger')
@@ -857,8 +850,7 @@ def create_app():
         except Error as e:
             flash(f'Error fetching collaborations: {e}', 'danger')
             return redirect(url_for('home'))
-        
-        
+
     @app.route('/collaboration_requests')
     @login_required
     def collaboration_requests():

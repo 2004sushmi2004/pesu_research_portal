@@ -1,11 +1,11 @@
-
-<!-- templates/create_project.html -->
+edit_project.html
+!-- templates/edit_project.html -->
 {% extends "layout.html" %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="max-w-2xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6">Create New Project</h1>
+        <h1 class="text-3xl font-bold mb-6">Edit Project</h1>
         
         <form method="POST" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
             <div class="mb-4">
@@ -13,7 +13,7 @@
                     Project Name
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                       id="name" name="name" type="text" required>
+                       id="name" name="name" type="text" value="{{ project.name }}" required>
             </div>
             
             <div class="mb-4">
@@ -21,15 +21,17 @@
                     Description
                 </label>
                 <textarea class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                          id="description" name="description" rows="4" required></textarea>
+                          id="description" name="description" rows="4" required>{{ project.description }}</textarea>
             </div>
             
+           
             <div class="mb-4">
                 <label class="block text-gray-700 text-sm font-bold mb-2" for="start_date">
                     Start Date
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                       id="start_date" name="start_date" type="date" required>
+                       id="start_date" name="start_date" type="date" 
+                       value="{{ project.start_date.strftime('%Y-%m-%d') }}" required>
             </div>
             
             <div class="mb-6">
@@ -37,13 +39,14 @@
                     End Date
                 </label>
                 <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" 
-                       id="end_date" name="end_date" type="date">
+                       id="end_date" name="end_date" type="date" 
+                       value="{{ project.end_date.strftime('%Y-%m-%d') if project.end_date else '' }}">
             </div>
             
             <div class="flex items-center justify-between">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" 
                         type="submit">
-                    Create Project
+                    Save Changes
                 </button>
                 <a href="{{ url_for('my_projects') }}" 
                    class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
@@ -54,7 +57,3 @@
     </div>
 </div>
 {% endblock %}
-
-
-
-

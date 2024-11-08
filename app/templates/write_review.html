@@ -1,0 +1,33 @@
+write_review.html
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mx-auto my-8">
+    <h1 class="text-2xl font-bold mb-4">Write a Review</h1>
+
+    <!-- "Go to Home" button at the top -->
+    <div class="flex justify-end mb-4">
+        <a href="{{ url_for('home') }}" 
+           class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          Go to Home
+        </a>
+      </div>
+
+    <form method="post" class="bg-white rounded-lg shadow p-6">
+        <div class="mb-4">
+            <label for="paper_id" class="block font-medium mb-2">Select a Paper</label>
+            <select name="paper_id" id="paper_id" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring focus:ring-blue-500">
+                <option value="">Select a paper</option>
+                {% for paper in papers %}
+                <option value="{{ paper.paperid }}">{{ paper.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="mb-4">
+            <label for="comments" class="block font-medium mb-2">Review</label>
+            <textarea name="comments" id="comments" rows="4" class="w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring focus:ring-blue-500" placeholder="Enter your review"></textarea>
+        </div>
+        <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">Submit Review</button>
+    </form>
+</div>
+{% endblock %}

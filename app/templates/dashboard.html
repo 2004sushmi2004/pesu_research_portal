@@ -62,14 +62,23 @@
                         <a href="{{ url_for('browse_datasets') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Browse All Datasets</a>
                     </div>
                 </div>
+                <!-- Projects Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-xl font-bold mb-4">Projects</h3>
+                    <div class="space-y-3">
+                        <a href="{{ url_for('create_project') }}" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Create Project</a>
+                        <a href="{{ url_for('my_projects') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Projects</a>
+                        <a href="{{ url_for('browse_projects') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Browse All Projects</a>
+                    </div>
+                </div>
 
                 <!-- Collaboration Section -->
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-xl font-bold mb-4">Collaboration</h3>
                     <div class="space-y-3">
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Find Collaborators</a>
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Collaborations</a>
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Collaboration Requests</a>
+                        <a href="{{ url_for('find_collaborators') }}" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Find Collaborators</a>
+                        <a href="{{ url_for('my_collaborations') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Collaborations</a>
+                        <a href="{{ url_for('collaboration_requests') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Collaboration Requests</a>
                     </div>
                 </div>
 
@@ -77,8 +86,8 @@
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-xl font-bold mb-4">Funding Sources</h3>
                     <div class="space-y-3">
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Add Funding Source</a>
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View Funding Sources</a>
+                        <a href="{{ url_for('add_funding_source') }}" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Add Funding Source</a>
+                        <a href="{{ url_for('view_funding_sources') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">View Funding Sources</a>
                     </div>
                 </div>
 
@@ -86,9 +95,10 @@
                 <div class="bg-white rounded-lg shadow p-6">
                     <h3 class="text-xl font-bold mb-4">Reviews</h3>
                     <div class="space-y-3">
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Write Review</a>
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Reviews</a>
-                        <a href="#" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Papers to Review</a>
+                        <a href="{{ url_for('write_review')}}" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Write Review</a>
+                        <a href="{{ url_for('my_reviews') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Reviews</a>
+                        <a href="{{ url_for('papers_to_review') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Papers to Review</a>
+
                     </div>
                 </div>
             </div>

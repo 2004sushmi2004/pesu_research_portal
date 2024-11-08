@@ -1,0 +1,54 @@
+collaboration_requests.html
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4">
+  <h2 class="text-2xl font-bold mb-8">Collaboration Requests</h2>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} p-4 mb-4 rounded-lg">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for request in requests %}
+    <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+      <div class="p-6">
+        <h3 class="text-lg font-semibold mb-2">{{ request.project_name }}</h3>
+        <p class="text-sm text-gray-500 mb-4">Request ID: {{ request.collaboration_request_id }}</p>
+        
+        <div class="text-sm text-gray-600 mb-4">
+          <p class="mb-2"><span class="font-medium">Sender:</span> {{ request.f_name }} {{ request.l_name }}</p>
+          <p class="flex items-center">
+            <span class="font-medium mr-2">Status:</span>
+            <span class="px-2 py-1 rounded-full text-xs {% if request.status == 'accepted' %}bg-green-100 text-green-800{% elif request.status == 'declined' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+              {{ request.status }}
+            </span>
+          </p>
+        </div>
+
+        {% if request.status == 'pending' %}
+        <div class="flex space-x-3">
+          <form action="{{ url_for('accept_collaboration', request_id=request.collaboration_request_id) }}" method="POST">
+            <button type="submit" 
+                    class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded transition-colors">
+              Accept
+            </button>
+          </form>
+          <form action="{{ url_for('decline_collaboration', request_id=request.collaboration_request_id) }}" method="POST">
+            <button type="submit" 
+                    class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition-colors">
+              Decline
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

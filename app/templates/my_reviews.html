@@ -1,0 +1,45 @@
+my_reviews.html
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mx-auto my-8">
+    <h1 class="text-2xl font-bold mb-4">My Reviews</h1>
+
+    <!-- "Go to Home" button at the top -->
+    <div class="flex justify-end mb-4">
+        <a href="{{ url_for('home') }}" 
+           class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          Go to Home
+        </a>
+      </div>
+
+    <h2 class="text-xl font-semibold mt-6 mb-4">Reviews I've Written</h2>
+    {% if my_reviews %}
+    <div class="space-y-4">
+        {% for review in my_reviews %}
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-xl font-bold mb-2">{{ review.title }}</h3>
+            <p class="mb-2">{{ review.comments }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500">You haven't written any reviews yet.</p>
+    {% endif %}
+
+    <h2 class="text-xl font-semibold mt-6 mb-4">Reviews I've Received</h2>
+    {% if received_reviews %}
+    <div class="space-y-4">
+        {% for review in received_reviews %}
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-xl font-bold mb-2">{{ review.title }}</h3>
+            <p class="mb-2">{{ review.comments }}</p>
+            <p class="text-gray-500 text-sm">Reviewed by: {{ review.f_name }} {{ review.l_name }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500">You haven't received any reviews on your papers yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

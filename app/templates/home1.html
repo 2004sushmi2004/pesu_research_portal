@@ -56,60 +56,6 @@
       font-weight: bold;
     }
 
-    /* Navigation styles */
-    .nav-container {
-      background-color: #444;
-      padding: 10px 0;
-    }
-
-    .nav-menu {
-      display: flex;
-      justify-content: center;
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      flex-wrap: wrap; /* Added to handle more menu items */
-    }
-
-    .nav-item {
-      position: relative;
-      margin: 0 15px;
-    }
-
-    .nav-link {
-      color: white;
-      text-decoration: none;
-      padding: 10px 15px;
-      display: block;
-      font-weight: bold;
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      background-color: #f9f9f9;
-      min-width: 200px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-      z-index: 1;
-      border-radius: 4px;
-    }
-
-    .nav-item:hover .dropdown-content {
-      display: block;
-    }
-
-    .dropdown-content a {
-      color: #333;
-      padding: 12px 16px;
-      text-decoration: none;
-      display: block;
-      text-align: left;
-    }
-
-    .dropdown-content a:hover {
-      background-color: #ddd;
-    }
-
     .button:hover, .auth-link:hover {
       background-color: #45a049;
     }
@@ -234,61 +180,6 @@
       {% endif %}
     </div>
   </header>
-
-  {% if current_user.is_authenticated %}
-  <nav class="nav-container">
-    <ul class="nav-menu">
-      <li class="nav-item">
-        <a href="#" class="nav-link">Research Papers</a>
-        <div class="dropdown-content">
-          <a href="{{ url_for('upload_paper') }}">Upload Paper</a>
-          <a href="{{ url_for('my_papers') }}">View My Papers</a>
-          <a href="{{ url_for('browse_papers') }}">Browse All Papers</a>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">Projects</a>
-        <div class="dropdown-content">
-          <a href="{{ url_for('create_project') }}">Create Project</a>
-          <a href="{{ url_for('my_projects') }}">My Projects</a>
-          <a href="{{ url_for('browse_projects') }}">Browse All Projects</a>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">Datasets</a>
-        <div class="dropdown-content">
-          <a href="{{ url_for('upload_dataset') }}">Upload Dataset</a>
-          <a href="{{ url_for('my_datasets') }}">View My Datasets</a>
-          <a href="{{ url_for('browse_datasets') }}">Browse All Datasets</a>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">Collaboration</a>
-        <div class="dropdown-content">
-          <a href="{{ url_for('find_collaborators') }}">Find Collaborators</a>
-          <a href="{{ url_for('my_collaborations') }}">My Collaborations</a>
-          <a href="{{ url_for('collaboration_requests') }}">Collaboration Requests</a>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">Funding Sources</a>
-        <div class="dropdown-content">
-          <a href="{{ url_for('add_funding_source') }}">Add Funding Source</a>
-          <a href="{{ url_for('view_funding_sources') }}">View Funding Sources</a>
-        </div>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link">Reviews</a>
-        <div class="dropdown-content">
-            <a href="{{ url_for('write_review')}}" class="block w-full text-center py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700">Write Review</a>
-            <a href="{{ url_for('my_reviews') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">My Reviews</a>
-            <a href="{{ url_for('papers_to_review') }}" class="block w-full text-center py-2 px-4 bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Papers to Review</a>
-        </div>
-      </li>
-    </ul>
-  </nav>
-  {% endif %}
-
 
   <div class="content">
     <!-- Main content area -->

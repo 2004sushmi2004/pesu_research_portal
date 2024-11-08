@@ -1,0 +1,25 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mx-auto py-8">
+    <h1 class="text-2xl font-bold mb-4">Edit Funding Source</h1>
+
+    <form action="{{ url_for('edit_funding_source', funding_source_id=funding_source.funding_source_id) }}" method="post" class="max-w-md mx-auto">
+        <div class="mb-4">
+            <label for="name" class="block font-medium mb-2">Name</label>
+            <input type="text" id="name" name="name" value="{{ funding_source.name }}" class="border rounded-md px-3 py-2 w-full" required>
+        </div>
+
+        <div class="mb-4">
+            <label for="organization" class="block font-medium mb-2">Organization</label>
+            <input type="text" id="organization" name="organization" value="{{ funding_source.organization }}" class="border rounded-md px-3 py-2 w-full" required>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Save
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

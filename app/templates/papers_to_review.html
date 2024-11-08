@@ -1,0 +1,29 @@
+
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container mx-auto my-8">
+    <h1 class="text-2xl font-bold mb-4">Papers to Review</h1>
+
+    <!-- "Go to Home" button at the top -->
+    <div class="flex justify-end mb-4">
+        <a href="{{ url_for('home') }}" 
+           class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          Go to Home
+        </a>
+      </div>
+
+    {% if papers %}
+    <div class="space-y-4">
+        {% for paper in papers %}
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-xl font-bold mb-2">{{ paper.title }}</h3>
+            <a href="{{ url_for('write_review', paper_id=paper.paperid) }}" class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700">Write Review</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-500">You don't have any papers to review at the moment.</p>
+    {% endif %}
+</div>
+{% endblock %}
