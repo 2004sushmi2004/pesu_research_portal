@@ -1,0 +1,45 @@
+<!-- fund_project.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fund Project</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">Fund Project</h1>
+
+        <!-- Flash message for success or failure -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Project funding form -->
+        <form method="POST" class="bg-white rounded-lg shadow-md p-6">
+            <div class="mb-4">
+                <label for="amount" class="block text-lg font-medium text-gray-700">Amount to Fund(Rs)</label>
+
+                <input type="number" id="amount" name="amount" class="mt-2 p-2 border border-gray-300 rounded w-full" required>
+            </div>
+            
+            <!-- Hidden field for project ID -->
+            <input type="hidden" name="project_id" value="{{ project_id }}">
+
+            <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4">
+                Fund Project
+            </button>
+        </form>
+        
+    </div>
+</body>
+</html>

@@ -7,25 +7,26 @@ import io
 import uuid
 from datetime import datetime
 import os
+from flask import session
 
 class User:
-    def __init__(self, id, email):
+    def __init__(self, id, email, user_type):
         self.id = id
         self.email = email
+        self.user_type = user_type
         self.is_authenticated = True
         self.is_active = True
         self.is_anonymous = False
 
     def get_id(self):
         return str(self.id)
-
     
 def get_db_connection():
     try:
         connection = mysql.connector.connect(
             host="localhost",
             user="root",
-            password="sql@2003",
+            password="Unlock@2004",
             database="pesu_research_portal"
         )
         return connection
@@ -46,13 +47,24 @@ def create_app():
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
+            
+            # First, try to load a researcher with the given user_id
             cursor.execute("SELECT * FROM researcher WHERE researcher_id = %s", (user_id,))
             user_data = cursor.fetchone()
+            
+            # If no researcher is found, try to load a funding_source with the given user_id
+            if not user_data:
+                cursor.execute("SELECT * FROM funding_source WHERE funding_source_id = %s", (user_id,))
+                user_data = cursor.fetchone()
+            
             cursor.close()
             conn.close()
             
             if user_data:
-                return User(user_data['researcher_id'], user_data['email'])
+                # Return a User object based on the user type
+                return User(user_data['researcher_id'] if 'researcher_id' in user_data else user_data['funding_source_id'], 
+                            user_data['email'], 
+                            user_data['user_type'])
             return None
         except Error as e:
             print(f"Error loading user: {e}")
@@ -68,9 +80,20 @@ def create_app():
     @login_required
     def home():
         return render_template('home.html')
-
-    @app.route('/register', methods=['GET', 'POST'])
+    
+    @app.route('/register', methods=['GET'])
     def register():
+        if current_user.is_authenticated:
+            return redirect(url_for('home'))
+        
+        user_type = request.args.get('type', 'researcher')
+        if user_type not in ['researcher', 'funding_source']:
+            user_type = 'researcher'
+        
+        return render_template('register_choice.html')
+
+    @app.route('/register/researcher', methods=['GET', 'POST'])
+    def register_researcher():
         if current_user.is_authenticated:
             return redirect(url_for('home'))
             
@@ -100,13 +123,13 @@ def create_app():
             if errors:
                 for error in errors:
                     flash(error, 'danger')
-                return render_template('register.html')
+                return render_template('register_researcher.html')
 
             try:
                 conn = get_db_connection()
                 if not conn:
                     flash('Database connection failed', 'danger')
-                    return render_template('register.html')
+                    return render_template('register_researcher.html')
 
                 cursor = conn.cursor()
                 
@@ -114,7 +137,7 @@ def create_app():
                 cursor.execute("SELECT email FROM researcher WHERE email = %s", (email,))
                 if cursor.fetchone():
                     flash('Email already registered', 'danger')
-                    return render_template('register.html')
+                    return render_template('register_researcher.html')
 
                 # Generate unique researcher_id and hash password
                 researcher_id = str(uuid.uuid4())
@@ -123,7 +146,7 @@ def create_app():
                 # Insert new researcher
                 insert_query = """
                     INSERT INTO researcher 
-                    (researcher_id, email, password, f_name, l_name, expertise, affiliation)
+                    (researcher_id, email, password, f_name, l_name, expertise, affiliation,user_type)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """
                 values = (
@@ -133,7 +156,8 @@ def create_app():
                     f_name,
                     l_name,
                     expertise,
-                    affiliation
+                    affiliation,
+                    'researcher'
                 )
                 
                 cursor.execute(insert_query, values)
@@ -144,7 +168,7 @@ def create_app():
 
             except Error as e:
                 flash(f'Registration failed: {str(e)}', 'danger')
-                return render_template('register.html')
+                return render_template('register_researcher.html')
                 
             finally:
                 if 'cursor' in locals():
@@ -152,48 +176,203 @@ def create_app():
                 if 'conn' in locals():
                     conn.close()
         
-        return render_template('register.html')
+        return render_template('register_researcher.html')
     
-    @app.route('/login', methods=['GET', 'POST'])
-    def login():
+    @app.route('/register/funding_source', methods=['GET', 'POST'])
+    def register_funding_source():
         if current_user.is_authenticated:
             return redirect(url_for('home'))
             
         if request.method == 'POST':
             email = request.form.get('email', '').strip()
             password = request.form.get('password', '')
-            
-            if not email or not password:
-                flash('Please enter both email and password', 'danger')
-                return render_template('login.html')
-                
+            confirm_password = request.form.get('confirm_password', '')
+            name = request.form.get('name', '').strip()
+            organization = request.form.get('organization', '').strip()
+            contact_person = request.form.get('contact_person', '').strip()
+            phone = request.form.get('phone', '').strip()
+
+            errors = []
+            if not email or '@' not in email:
+                errors.append('Valid email is required')
+            if not password:
+                errors.append('Password is required')
+            if password != confirm_password:
+                errors.append('Passwords do not match')
+            if not name:
+                errors.append('Name is required')
+            if not organization:
+                errors.append('Organization is required')
+            if not contact_person:
+                errors.append('Contact person is required')
+
+            if errors:
+                for error in errors:
+                    flash(error, 'danger')
+                return render_template('register_funding_source.html')
+
             try:
                 conn = get_db_connection()
                 if not conn:
                     flash('Database connection failed', 'danger')
-                    return render_template('login.html')
-                    
-                cursor = conn.cursor(dictionary=True)
-                cursor.execute("SELECT * FROM researcher WHERE email = %s", (email,))
-                user_data = cursor.fetchone()
+                    return render_template('register_funding_source.html')
+
+                cursor = conn.cursor()
                 
-                if user_data and check_password_hash(user_data['password'], password):
-                    user = User(user_data['researcher_id'], user_data['email'])
-                    login_user(user)
-                    return redirect(url_for('home'))
-                else:
-                    flash('Invalid email or password', 'danger')
-                    
+                # Check if email already exists
+                cursor.execute("SELECT email FROM funding_source WHERE email = %s", (email,))
+                if cursor.fetchone():
+                    flash('Email already registered', 'danger')
+                    return render_template('register_funding_source.html')
+
+                funding_source_id = str(uuid.uuid4())
+                hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+                
+                insert_query = """
+                    INSERT INTO funding_source 
+                    (funding_source_id, email, password, name, organization, contact_person, phone,user_type)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """
+                values = (
+                    funding_source_id,
+                    email,
+                    hashed_password,
+                    name,
+                    organization,
+                    contact_person,
+                    phone,
+                    'funding_source'
+                )
+                
+                cursor.execute(insert_query, values)
+                conn.commit()
+                
+                flash('Registration successful! Please log in.', 'success')
+                return redirect(url_for('login'))
+
             except Error as e:
-                flash(f'Login failed: {str(e)}', 'danger')
+                flash(f'Registration failed: {str(e)}', 'danger')
+                return render_template('register_funding_source.html')
                 
             finally:
                 if 'cursor' in locals():
                     cursor.close()
                 if 'conn' in locals():
                     conn.close()
-                    
-        return render_template('login.html')
+        
+        return render_template('register_funding_source.html')
+    
+
+
+    @app.route('/login', methods=['GET', 'POST'])
+    def login():
+        if current_user.is_authenticated:
+            return redirect(url_for('home'))
+
+        # Get the next parameter from either GET or POST request
+        next_page = request.args.get('next') or request.form.get('next')
+        
+        if request.method == 'POST':
+            email = request.form.get('email', '').strip()
+            password = request.form.get('password', '')
+            user_type = request.form.get('user_type')
+
+            if not email or not password or not user_type:
+                flash('Please enter all required fields', 'danger')
+                return render_template('login.html', next=next_page)
+
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor(dictionary=True)
+
+                if user_type == 'researcher':
+                    cursor.execute("SELECT * FROM researcher WHERE email = %s", (email,))
+                    user_data = cursor.fetchone()
+                    if user_data and check_password_hash(user_data['password'], password):
+                        user = User(user_data['researcher_id'], user_data['email'], 'researcher')
+                        login_user(user)
+                        session.permanent = True  # Make session permanent
+                        return redirect(next_page or url_for('home'))
+
+                elif user_type == 'funding_source':
+                    cursor.execute("SELECT * FROM funding_source WHERE email = %s", (email,))
+                    user_data = cursor.fetchone()
+                    if user_data and check_password_hash(user_data['password'], password):
+                        user = User(user_data['funding_source_id'], user_data['email'], 'funding_source')
+                        login_user(user)
+                        session.permanent = True  # Make session permanent
+                        return redirect(url_for('browse_projects_funder'))
+                
+                flash('Invalid email or password', 'danger')
+
+            except Error as e:
+                flash(f'Login failed: {str(e)}', 'danger')
+            finally:
+                if 'cursor' in locals():
+                    cursor.close()
+                if 'conn' in locals():
+                    conn.close()
+
+        # For GET requests or failed logins, render the template with next parameter
+        return render_template('login.html', next=next_page)
+
+
+
+    
+    @app.route('/browse_projects_funder')
+    @login_required
+    def browse_projects_funder():
+        if current_user.user_type != 'funding_source':
+            flash('Access denied', 'danger')
+            return redirect(url_for('home'))
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            cursor.execute("""
+                SELECT p.*, r.f_name, r.l_name, r.affiliation 
+                FROM project p 
+                JOIN researcher r ON p.creator_id = r.researcher_id
+                WHERE p.project_id NOT IN (
+                    SELECT project_id FROM funded_projects 
+                    WHERE funding_source_id = %s AND status = 'approved'
+                )
+            """, (current_user.id,))
+            projects = cursor.fetchall()
+            return render_template('browse_projects_funder.html', projects=projects)
+        finally:
+            cursor.close()
+            conn.close()
+
+    # Route for funding a project
+    @app.route('/fund_project/<project_id>', methods=['GET', 'POST'])
+    @login_required
+    def fund_project(project_id):
+        if current_user.user_type != 'funding_source':
+            flash('Access denied', 'danger')
+            return redirect(url_for('home'))
+        
+        if request.method == 'POST':
+            amount = request.form.get('amount')
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                funding_id = str(uuid.uuid4())
+                cursor.execute("""
+                    INSERT INTO funded_projects 
+                    (funding_id, project_id, funding_source_id, amount, funding_date, status)
+                    VALUES (%s, %s, %s, %s, CURDATE(), 'approved')
+                """, (funding_id, project_id, current_user.id, amount))
+                conn.commit()
+                flash('Project funded successfully!', 'success')
+                return redirect(url_for('browse_projects_funder'))
+            except Error as e:
+                flash(f'Funding failed: {str(e)}', 'danger')
+            finally:
+                cursor.close()
+                conn.close()
+        
+        return render_template('fund_project.html', project_id=project_id)
 
 
     @app.route('/dashboard')
@@ -669,34 +848,29 @@ def create_app():
         
         return render_template('create_project.html')
 
+    
     @app.route('/my_projects')
     @login_required
     def my_projects():
+        if current_user.user_type != 'researcher':
+            flash('Access denied', 'danger')
+            return redirect(url_for('home'))
+        
         try:
             conn = get_db_connection()
-            if not conn:
-                flash('Database connection failed', 'danger')
-                return redirect(url_for('dashboard'))
-
             cursor = conn.cursor(dictionary=True)
             cursor.execute("""
-                SELECT * FROM project 
-                WHERE creator_id = %s 
-                ORDER BY start_date DESC
+                SELECT p.*, f.amount, f.funding_date, fs.name as funder_name
+                FROM project p
+                LEFT JOIN funded_projects f ON p.project_id = f.project_id
+                LEFT JOIN funding_source fs ON f.funding_source_id = fs.funding_source_id
+                WHERE p.creator_id = %s
             """, (current_user.id,))
             projects = cursor.fetchall()
-
             return render_template('my_projects.html', projects=projects)
-
-        except Error as e:
-            flash(f'Failed to retrieve projects: {str(e)}', 'danger')
-            return redirect(url_for('dashboard'))
-
         finally:
-            if 'cursor' in locals():
-                cursor.close()
-            if 'conn' in locals():
-                conn.close()
+            cursor.close()
+            conn.close()
 
 
     @app.route('/browse_projects')
