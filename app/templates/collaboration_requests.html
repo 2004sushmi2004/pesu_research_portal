@@ -1,4 +1,4 @@
-collaboration_requests.html
+
 {% extends 'layout.html' %}
 
 {% block content %}
@@ -13,6 +13,26 @@ collaboration_requests.html
     {% endif %}
   {% endwith %}
 
+  <div class="flex justify-end mb-4">
+    <a href="{{ url_for('home') }}" 
+       class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+      Go to Home
+    </a>
+  </div>
+
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      background-image: url('  https://blog.mangoapps.com/wp-content/uploads/11-business-3152586_1920-1.jpg'); /* Add your image URL here */
+      background-size: cover; /* Ensures the image covers the entire background */
+      background-position: center center; /* Centers the image */
+      background-attachment: fixed; /* Keeps the background fixed when scrolling */
+      margin: 0;
+      padding: 0;
+      }
+    </style> 
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for request in requests %}
     <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">

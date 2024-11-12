@@ -465,7 +465,7 @@ def create_app():
             return redirect(url_for('my_papers'))
 
         except Error as e:
-            flash(f'Failed to delete paper: {str(e)}', 'danger')
+            flash(f'Failed to delete paper: It has already been reviewed', 'danger')
             return redirect(url_for('my_papers'))
 
         finally:
@@ -976,7 +976,7 @@ def create_app():
             return redirect(url_for('my_projects'))
             
         except Error as e:
-            flash(f'Failed to delete project: {str(e)}', 'danger')
+            flash(f'Failed to delete project: It already has collaborators or funding source', 'danger')
             return redirect(url_for('my_projects'))
             
         finally:
