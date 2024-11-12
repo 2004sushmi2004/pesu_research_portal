@@ -147,7 +147,7 @@ def create_app():
                 insert_query = """
                     INSERT INTO researcher 
                     (researcher_id, email, password, f_name, l_name, expertise, affiliation,user_type)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s,%s)
                 """
                 values = (
                     researcher_id,
@@ -231,7 +231,7 @@ def create_app():
                 insert_query = """
                     INSERT INTO funding_source 
                     (funding_source_id, email, password, name, organization, contact_person, phone,user_type)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s,%s)
                 """
                 values = (
                     funding_source_id,
