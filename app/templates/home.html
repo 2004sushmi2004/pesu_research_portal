@@ -216,6 +216,49 @@
     margin-bottom: 30px;
   }
   </style>
+  <style>
+    /* Add these new styles for the statistics section */
+    .stats-section {
+      padding: 40px 20px;
+      text-align: center;
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      margin: 40px auto;
+      border-radius: 15px;
+      max-width: 1200px;
+    }
+
+    .stats-container {
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 200px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .stat-number {
+      font-size: 2.5em;
+      font-weight: bold;
+      color: #1df4ff;
+      margin-bottom: 10px;
+    }
+
+    .stat-label {
+      color: white;
+      font-size: 1.2em;
+    }
+  </style>
+  
 </head>
 <body>
   <header>
@@ -313,18 +356,22 @@
     </div>
   </section>
 
-  <!-- Team Section -->
-  <section class="team-section">
-    <h2 class="section-header">Our Team</h2>
-    <div class="team-container">
-      <div class="team-member">
-        <h3>Sruthika T B</h3>
-        <p>5th Semester, PES University</p>
+  <section class="stats-section">
+    <h2 class="section-header" style="color: #1df4ff;">Research Portal Statistics</h2>
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_projects }}</div>
+        <div class="stat-label">Total Projects</div>
       </div>
       
-      <div class="team-member">
-        <h3>Sushmitha S</h3>
-        <p>5th Semester, PES University</p>
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_papers }}</div>
+        <div class="stat-label">Research Papers</div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-number">{{ stats.total_datasets }}</div>
+        <div class="stat-label">Datasets Available</div>
       </div>
     </div>
   </section>

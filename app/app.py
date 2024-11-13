@@ -79,8 +79,53 @@ def create_app():
     @app.route('/home')
     @login_required
     def home():
-        return render_template('home.html')
-    
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash("Unable to connect to database", "error")
+                return render_template('home.html', stats=None)
+                
+            cursor = conn.cursor(dictionary=True)
+            
+            # First verify if tables exist
+            cursor.execute("""
+                SELECT TABLE_NAME 
+                FROM information_schema.tables 
+                WHERE TABLE_SCHEMA = 'pesu_research_portal' 
+                AND TABLE_NAME IN ('project', 'research_paper', 'dataset')
+            """)
+            existing_tables = [row['TABLE_NAME'] for row in cursor.fetchall()]
+            
+            # Build dynamic query based on existing tables
+            queries = []
+            if 'project' in existing_tables:
+                queries.append("(SELECT COUNT(*) FROM project) as total_projects")
+            if 'research_paper' in existing_tables:
+                queries.append("(SELECT COUNT(*) FROM research_paper) as total_papers")
+            if 'dataset' in existing_tables:
+                queries.append("(SELECT COUNT(*) FROM dataset) as total_datasets")
+                
+            if queries:
+                query = "SELECT " + ", ".join(queries)
+                cursor.execute(query)
+                stats = cursor.fetchone()
+            else:
+                stats = {'total_projects': 0, 'total_papers': 0, 'total_datasets': 0}
+                
+            cursor.close()
+            conn.close()
+            
+            return render_template('home.html', stats=stats)
+            
+        except Error as e:
+            print(f"Database error: {e}")
+            flash("An error occurred while fetching statistics", "error")
+            return render_template('home.html', stats=None)
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            flash("An unexpected error occurred", "error")
+            return render_template('home.html', stats=None)
+        
     @app.route('/register', methods=['GET'])
     def register():
         if current_user.is_authenticated:
@@ -859,14 +904,39 @@ def create_app():
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
+            
+            # First get all projects
             cursor.execute("""
-                SELECT p.*, f.amount, f.funding_date, fs.name as funder_name
+                SELECT p.*
                 FROM project p
-                LEFT JOIN funded_projects f ON p.project_id = f.project_id
-                LEFT JOIN funding_source fs ON f.funding_source_id = fs.funding_source_id
                 WHERE p.creator_id = %s
             """, (current_user.id,))
             projects = cursor.fetchall()
+            
+            # Then get all fundings for these projects
+            project_ids = [p['project_id'] for p in projects]
+            if project_ids:
+                placeholders = ','.join(['%s'] * len(project_ids))
+                cursor.execute(f"""
+                    SELECT f.*, fs.name as funder_name, f.project_id
+                    FROM funded_projects f
+                    JOIN funding_source fs ON f.funding_source_id = fs.funding_source_id
+                    WHERE f.project_id IN ({placeholders})
+                    ORDER BY f.funding_date DESC
+                """, tuple(project_ids))
+                fundings = cursor.fetchall()
+                
+                # Group fundings by project_id
+                funding_dict = {}
+                for funding in fundings:
+                    if funding['project_id'] not in funding_dict:
+                        funding_dict[funding['project_id']] = []
+                    funding_dict[funding['project_id']].append(funding)
+                
+                # Add fundings to their respective projects
+                for project in projects:
+                    project['fundings'] = funding_dict.get(project['project_id'], [])
+            
             return render_template('my_projects.html', projects=projects)
         finally:
             cursor.close()
@@ -985,35 +1055,115 @@ def create_app():
             if 'conn' in locals():
                 conn.close()
 
+
+
+    def validate_researcher_exists(cursor, researcher_id):
+        """Validate that a researcher exists in the database"""
+        cursor.execute("SELECT researcher_id FROM researcher WHERE researcher_id = %s", (str(researcher_id),))
+        return cursor.fetchone() is not None
+
+    def validate_project_exists(cursor, project_id, creator_id):
+        """Validate that a project exists and belongs to the creator"""
+        cursor.execute("SELECT project_id FROM project WHERE project_id = %s AND creator_id = %s", 
+                    (str(project_id), str(creator_id)))
+        return cursor.fetchone() is not None
+
+    def check_existing_request(cursor, sender_id, receiver_id, project_id):
+        """Check if a collaboration request already exists"""
+        cursor.execute("""
+            SELECT collaboration_request_id FROM collaboration_request 
+            WHERE sender_id = %s AND receiver_id = %s AND project_id = %s 
+            AND status = 'pending'
+        """, (str(sender_id), str(receiver_id), str(project_id)))
+        return cursor.fetchone() is not None
+
     @app.route('/find_collaborators', methods=['GET', 'POST'])
     @login_required
     def find_collaborators():
         if request.method == 'POST':
-            collaborator_id = request.form['collaborator_id']
-            project_id = request.form['project_id']
+            collaborator_id = request.form.get('collaborator_id')
+            project_id = request.form.get('project_id')
+            
+            # Input validation
+            if not collaborator_id or not project_id:
+                flash('Missing required fields.', 'danger')
+                return redirect(url_for('find_collaborators'))
+            
             try:
                 conn = get_db_connection()
-                cursor = conn.cursor()
-                cursor.execute("INSERT INTO collaboration_request (sender_id, receiver_id, project_id, status) VALUES (%s, %s, %s, 'pending')", (current_user.id, collaborator_id, project_id))
+                cursor = conn.cursor(dictionary=True)
+                
+                # Validate the receiver exists
+                if not validate_researcher_exists(cursor, collaborator_id):
+                    flash('Selected collaborator does not exist.', 'danger')
+                    return redirect(url_for('find_collaborators'))
+                
+                # Validate the project exists and belongs to the sender
+                if not validate_project_exists(cursor, project_id, current_user.id):
+                    flash('Invalid project selected.', 'danger')
+                    return redirect(url_for('find_collaborators'))
+                
+                # Check for existing pending request
+                if check_existing_request(cursor, current_user.id, collaborator_id, project_id):
+                    flash('A pending collaboration request already exists for this project and collaborator.', 'warning')
+                    return redirect(url_for('find_collaborators'))
+                
+                # Insert the collaboration request
+                cursor.execute("""
+                    INSERT INTO collaboration_request 
+                    (sender_id, receiver_id, project_id, status) 
+                    VALUES (%s, %s, %s, 'pending')
+                """, (str(current_user.id), str(collaborator_id), str(project_id)))
+                
                 conn.commit()
+                flash('Collaboration request sent successfully.', 'success')
+                
+            except Error as e:
+                conn.rollback()
+                logging.error(f"Database error in find_collaborators: {str(e)}")
+                flash('An error occurred while processing your request. Please try again.', 'danger')
+                
+            except Exception as e:
+                conn.rollback()
+                logging.error(f"Unexpected error in find_collaborators: {str(e)}")
+                flash('An unexpected error occurred. Please try again.', 'danger')
+                
+            finally:
                 cursor.close()
                 conn.close()
-                flash('Collaboration request sent successfully.', 'success')
-            except Error as e:
-                flash(f'Error sending collaboration request: {e}', 'danger')
+                
+        # GET request handling
         try:
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
-            cursor.execute("SELECT researcher_id, email, f_name, l_name FROM researcher WHERE researcher_id <> %s", (current_user.id,))
+            
+            # Get all researchers except current user
+            cursor.execute("""
+                SELECT researcher_id, email, f_name, l_name 
+                FROM researcher 
+                WHERE researcher_id <> %s
+            """, (str(current_user.id),))
             collaborators = cursor.fetchall()
-            cursor.execute("SELECT project_id, name FROM project WHERE creator_id = %s", (current_user.id,))
+            
+            # Get projects created by current user
+            cursor.execute("""
+                SELECT project_id, name 
+                FROM project 
+                WHERE creator_id = %s
+            """, (str(current_user.id),))
             projects = cursor.fetchall()
+            
             cursor.close()
             conn.close()
-            return render_template('find_collaborators.html', collaborators=collaborators, projects=projects)
+            
+            return render_template('find_collaborators.html', 
+                                collaborators=collaborators, 
+                                projects=projects)
+            
         except Error as e:
-            flash(f'Error fetching collaborators: {e}', 'danger')
-            return redirect(url_for('home'))
+            logging.error(f"Database error while fetching data: {str(e)}")
+            flash('Error loading collaborator data. Please try again.', 'danger')
+        return redirect(url_for('home'))
     @app.route('/my_collaborations')
     @login_required
     def my_collaborations():
