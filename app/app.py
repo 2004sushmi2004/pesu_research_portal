@@ -1120,12 +1120,12 @@ def create_app():
                 
             except Error as e:
                 conn.rollback()
-                logging.error(f"Database error in find_collaborators: {str(e)}")
+                flash(f"Database error in find_collaborators: {str(e)}")
                 flash('An error occurred while processing your request. Please try again.', 'danger')
                 
             except Exception as e:
                 conn.rollback()
-                logging.error(f"Unexpected error in find_collaborators: {str(e)}")
+                flash(f"Unexpected error in find_collaborators: {str(e)}")
                 flash('An unexpected error occurred. Please try again.', 'danger')
                 
             finally:
@@ -1161,9 +1161,10 @@ def create_app():
                                 projects=projects)
             
         except Error as e:
-            logging.error(f"Database error while fetching data: {str(e)}")
+            flash(f"Database error while fetching data: {str(e)}")
             flash('Error loading collaborator data. Please try again.', 'danger')
         return redirect(url_for('home'))
+    
     @app.route('/my_collaborations')
     @login_required
     def my_collaborations():
