@@ -111,11 +111,13 @@ def create_app():
                 stats = cursor.fetchone()
             else:
                 stats = {'total_projects': 0, 'total_papers': 0, 'total_datasets': 0}
+
+            top_researchers = get_top_researchers()
                 
             cursor.close()
             conn.close()
             
-            return render_template('home.html', stats=stats)
+            return render_template('home.html', stats=stats,top_researchers=top_researchers)
             
         except Error as e:
             print(f"Database error: {e}")
@@ -1470,5 +1472,86 @@ def create_app():
                 cursor.close()
             if 'conn' in locals():
                 conn.close()
+
+    @app.route('/researchers', methods=['GET'])
+    @login_required
+    def researchers():
+        expertise_filter = request.args.get('expertise', '')
+        try:
+            conn = get_db_connection()
+            if not conn:
+                flash("Unable to connect to database", "error")
+                return render_template('researchers.html', researchers=[], expertise_list=[])
+                
+            cursor = conn.cursor(dictionary=True)
+            
+            # Get list of unique expertise areas
+            cursor.execute("SELECT DISTINCT expertise FROM researcher ORDER BY expertise")
+            expertise_list = [row['expertise'] for row in cursor.fetchall()]
+            
+            # Use the stored procedure to get researchers
+            if expertise_filter:
+                cursor.callproc('GetUsersByExpertise', [expertise_filter])
+                # Fetch results from the stored procedure
+                researchers = []
+                for result in cursor.stored_results():
+                    researchers = result.fetchall()
+            else:
+                cursor.execute("""
+                    SELECT researcher_id, email, f_name as f_name, l_name as l_name, expertise 
+                    FROM researcher 
+                    ORDER BY expertise, f_name, l_name
+                """)
+                researchers = cursor.fetchall()
+                
+            cursor.close()
+            conn.close()
+            
+            return render_template('researchers.html', 
+                                researchers=researchers,
+                                expertise_list=expertise_list,
+                                selected_expertise=expertise_filter)
+                                
+        except Error as e:
+            print(f"Database error: {e}")
+            flash("An error occurred while fetching researchers", "error")
+            return render_template('researchers.html', researchers=[], expertise_list=[])
+        
+    def get_top_researchers():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
+            
+            query = """
+            SELECT 
+                r.researcher_id, r.f_name, r.l_name,r.expertise,
+                COUNT(c.project_id) AS collaboration_count
+            FROM researcher r
+            JOIN collaboration c ON r.researcher_id = c.researcher_id
+            WHERE c.status = 'accepted'
+            GROUP BY r.researcher_id
+            HAVING COUNT(c.project_id) > (
+                SELECT AVG(collab_count)
+                FROM (
+                    SELECT COUNT(*) AS collab_count
+                    FROM collaboration
+                    WHERE status = 'accepted'
+                    GROUP BY researcher_id
+                ) AS avg_collab_count
+            )
+            ORDER BY collaboration_count DESC
+            LIMIT 10;
+            """
+            
+            cursor.execute(query)
+            researchers = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            return researchers
+        except Error as e:
+            print(f"Error fetching top researchers: {e}")
+            return []
+
+
 
     return app

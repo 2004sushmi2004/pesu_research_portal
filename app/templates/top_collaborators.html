@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Top Collaborators</title>
+</head>
+<body>
+    <h1>Top Collaborators</h1>
+    
+    {% if top_researchers %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Researcher ID</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Collaboration Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for researcher in top_researchers %}
+                    <tr>
+                        <td>{{ researcher.researcher_id }}</td>
+                        <td>{{ researcher.f_name }}</td>
+                        <td>{{ researcher.l_name }}</td>
+                        <td>{{ researcher.collaboration_count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No top collaborators found.</p>
+    {% endif %}
+</body>
+</html>

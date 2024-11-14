@@ -1,0 +1,271 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="researchers-section">
+    <h2>Research Experts</h2>
+    
+    <!-- Expertise Filter -->
+    <div class="filter-section">
+        <form method="get" action="{{ url_for('researchers') }}" class="expertise-filter">
+            <select name="expertise" onchange="this.form.submit()">
+                <option value="">All Research Areas</option>
+                {% for expertise in expertise_list %}
+                <option value="{{ expertise }}" {% if selected_expertise == expertise %}selected{% endif %}>
+                    {{ expertise }}
+                </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+    
+    <div class="flex justify-end mb-4">
+        <a href="{{ url_for('home') }}" 
+           class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          Go to Home
+        </a>
+      </div>
+      
+    <!-- Researchers Grid -->
+    <div class="researchers-grid">
+        {% for researcher in researchers %}
+        <div class="researcher-card">
+            
+            <div class="researcher-avatar">
+                <!-- Placeholder avatar -->
+                <div class="avatar-circle">
+                    {{ researcher.f_name[0] }}{{ researcher.l_name[0] }}
+                </div>
+            </div>
+            <div class="researcher-info">
+                <h3>{{ researcher.f_name }} {{ researcher.l_name }}</h3>
+                <p class="expertise-tag">{{ researcher.expertise }}</p>
+                <div class="researcher-actions">
+                    <a href="#" class="view-profile-button" 
+                       onclick="viewProfile('{{ researcher.f_name }}', '{{ researcher.l_name }}', '{{ researcher.email }}', '{{ researcher.expertise }}')">
+                        View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Profile Modal -->
+<div id="profileModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Researcher Profile</h2>
+        <div id="profileContent"></div>
+    </div>
+</div>
+
+
+
+<style>
+.researchers-section {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+.researchers-section h2 {
+    text-align: center;
+    color: #1df4ff;
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.filter-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.expertise-filter select {
+    padding: 10px 20px;
+    font-size: 1.1em;
+    border: 2px solid #1df4ff;
+    border-radius: 8px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    cursor: pointer;
+    min-width: 250px;
+}
+
+.researchers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+
+.researcher-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.researcher-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(29, 244, 255, 0.1);
+}
+
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background: #1df4ff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    text-transform: uppercase;
+}
+
+.researcher-info h3 {
+    color: white;
+    margin: 10px 0;
+    font-size: 1.2em;
+}
+
+.expertise-tag {
+    background: rgba(29, 244, 255, 0.2);
+    color: #1df4ff;
+    padding: 5px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin: 10px 0;
+    font-size: 0.9em;
+}
+
+.researcher-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.view-profile-button {
+    display: inline-block;
+    padding: 8px 15px;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    background-color: rgba(29, 244, 255, 0.2);
+    color: #1df4ff;
+    border: 1px solid #1df4ff;
+}
+
+.view-profile-button:hover {
+    background-color: rgba(29, 244, 255, 0.3);
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+    background-color: rgba(0, 0, 0, 0.9);
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #1df4ff;
+    width: 80%;
+    max-width: 600px;
+    border-radius: 15px;
+    color: white;
+}
+
+.modal-content h2 {
+    color: #1df4ff;
+    margin-bottom: 20px;
+}
+
+.modal-content h3 {
+    color: white;
+    margin: 15px 0;
+}
+
+.profile-item {
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+.close {
+    color: #1df4ff;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #00c3cc;
+}
+
+@media (max-width: 768px) {
+    .researchers-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+</style>
+
+
+
+<script>
+// Get the modal
+var modal = document.getElementById("profileModal");
+var profileContent = document.getElementById("profileContent");
+var span = document.getElementsByClassName("close")[0];
+
+function viewProfile(firstName, lastName, email, expertise) {
+    // Update modal content with the passed data
+    profileContent.innerHTML = `
+        <div class="profile-item">
+            <strong>Name:</strong> ${firstName} ${lastName}
+        </div>
+        <div class="profile-item">
+            <strong>Email:</strong> ${email}
+        </div>
+        <div class="profile-item">
+            <strong>Expertise:</strong> ${expertise}
+        </div>
+    `;
+    
+    // Show modal
+    modal.style.display = "block";
+}
+
+// Close modal when clicking the × button
+span.onclick = function() {
+    modal.style.display = "none";
+}
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+</script>
+{% endblock %}

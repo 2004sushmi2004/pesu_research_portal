@@ -257,7 +257,61 @@
       color: white;
       font-size: 1.2em;
     }
+  
   </style>
+  <style>
+    .scrolling-names-container {
+      background-color: rgba(0, 0, 0, 0.6);
+      padding: 8px 0;
+      overflow: hidden;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .scrolling-names {
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    
+    .scroll-content {
+      display: inline-block;
+      animation: scrollText 30s linear infinite;
+      padding-left: 100%;
+    }
+    
+    .researcher-name {
+      color: #1df4ff;
+      font-size: 1em;
+      margin: 0 15px;
+    }
+    
+    .separator {
+      color: rgba(255, 255, 255, 0.3);
+      margin: 0 5px;
+    }
+
+    .section-title {
+  font-size: 1em;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #1df4ff;
+ }
+    
+    @keyframes scrollText {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+    
+    /* Optional: Pause animation on hover */
+    .scrolling-names:hover .scroll-content {
+      animation-play-state: paused;
+    }
+    </style>
+
   
 </head>
 <body>
@@ -266,7 +320,6 @@
     <img src="https://applyexams.com/pes.edu/files/logo1.jpeg" alt="Research Portal Logo" class="logo">
 
     <h1>Welcome to the PESU Research Portal</h1>
-
     <!-- Right-aligned Login and Register buttons -->
     <div class="auth-links">
       {% if current_user.is_authenticated %}
@@ -279,9 +332,13 @@
     </div>
   </header>
 
+
   {% if current_user.is_authenticated %}
   <nav class="nav-container">
     <ul class="nav-menu">
+      <li class="nav-item">
+        <a href="{{ url_for('researchers') }}" class="nav-link">Researchers</a>
+      </li>
       <li class="nav-item">
         <a href="#" class="nav-link">Research Papers</a>
         <div class="dropdown-content">
@@ -324,6 +381,18 @@
       </li>
     </ul>
   </nav>
+  <div class="scrolling-names-container">
+    <h1 class="section-title">Top Researchers</h1>
+    <div class="scrolling-names">
+      <div class="scroll-content">
+        {% for researcher in top_researchers %}
+          
+          <span class="researcher-name">{{ researcher.f_name }} {{ researcher.l_name }} {{ researcher.expertise }}</span>
+          <span class="separator">•</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
   {% endif %}
 
 
