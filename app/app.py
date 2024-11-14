@@ -72,9 +72,12 @@ def create_app():
         
     @app.route('/')
     def landing():
-        if current_user.is_authenticated:
-            return redirect(url_for('home'))
-        return redirect(url_for('login'))
+            if current_user.is_authenticated:
+                if current_user.user_type == 'researcher':
+                    return redirect(url_for('home'))
+                elif current_user.user_type == 'funding_source':
+                    return redirect(url_for('browse_projects_funder'))
+            return redirect(url_for('login'))
 
     @app.route('/home')
     @login_required
